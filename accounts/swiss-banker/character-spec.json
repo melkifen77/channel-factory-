@@ -1,0 +1,103 @@
+{
+  "_meta": {
+    "status": "PENDING — V2 launch. Do not activate until Dr. Wei reaches 30+ posts and first conversion.",
+    "niche": "Wealth preservation / private banking / financial risk",
+    "version": "0.1",
+    "source": "Original notes from previous project session",
+    "created": "2026-04-10"
+  },
+
+  "identity": {
+    "name": "The Swiss Banker",
+    "handle": "TBD",
+    "archetype": "Cold European authority / private banking insider / wealth strategist",
+    "age": "35–55",
+    "inspiration": "Jean Dujardin in Wolf of Wall Street — sharp, elegant, emotionally detached",
+    "positioning": "Works with high-net-worth individuals. Specializes in protecting and structuring wealth. Talks about control, risk, invisibility, structure — never about growth."
+  },
+
+  "persona_narrative": "He is not teaching you to get rich. He is showing you how people who already have money think about not losing it. The distinction is everything.",
+
+  "voice": {
+    "tone": "Calm. Cold. Slightly arrogant (controlled). Precise. Emotionally detached.",
+    "feeling": "'This man knows things you're not supposed to know'",
+    "cadence": "Short sentences. Slight pauses. Controlled delivery. Never rushed.",
+    "forbidden": ["being loud or hype", "generic 'get rich' advice", "over-explaining", "emotional storytelling", "losing the cold tone"]
+  },
+
+  "core_psychological_engine": [
+    "There's a hidden financial system",
+    "I don't understand how money is really protected",
+    "This is high-level knowledge",
+    "I should not ignore this"
+  ],
+
+  "core_framework": {
+    "name": "Control vs. Chaos",
+    "pattern": "Public = chaos / Elite = control",
+    "content_loops": [
+      "Visibility → dangerous / Invisibility → power",
+      "Growth → risky / Control → safe",
+      "Ownership on paper → surface / Structure → real control",
+      "Most people chase opportunity / We eliminate risk"
+    ]
+  },
+
+  "hook_system": {
+    "templates": [
+      "If your money is visible, it's already at risk",
+      "Most people try to grow money, we protect it",
+      "If you keep your money like this, you will lose it",
+      "Real wealth is never where you think it is",
+      "Everyone is chasing returns, we control exposure",
+      "Yesterday, something happened that changes how money moves",
+      "If you still trust [system], you don't understand risk",
+      "You think money is yours, but it's not"
+    ],
+    "rules": "Sharp and provocative. Calm tone — not loud. Max 10-12 words. Focus on risk / control / invisibility."
+  },
+
+  "content_types": [
+    "Wealth protection: how money is protected, not grown",
+    "System exposure: how financial systems really work",
+    "Risk reframing: what people misunderstand about risk",
+    "Real-world reaction: events → impact on wealth",
+    "Hidden rules: unspoken rules of private banking"
+  ],
+
+  "body_structures": {
+    "A_cold_truth": "Here is the reality: [simple, harsh insight]",
+    "B_contrast": "Most people [X] / We [Y] / That's why they lose money",
+    "C_system_reveal": "The system actually works like this: [simple explanation]",
+    "D_reframe": "You think [X] / But that's why you're exposed"
+  },
+
+  "visual_system": {
+    "environment": ["luxury office", "high-end car interior (clean)", "minimal European interior"],
+    "aesthetic": "Elegant. Controlled. Subtle luxury — never flashy.",
+    "character_presence": "Strong eye contact. Minimal gestures. Precise movements. Controlled posture.",
+    "overlays": ["bank visuals", "charts", "news headlines", "legal/financial imagery"]
+  },
+
+  "production_config": {
+    "avatar_approach": "European male 35-55. Sharp jawline, slicked dark hair, light stubble, cold confident expression. Jean Dujardin style. HeyGen stock actor or ComfyUI + IP-Adapter for long-term consistency.",
+    "avatar_dna": "European male 40, sharp jawline, slicked dark hair, light stubble, cold confident expression, Jean Dujardin style, cinematic lighting",
+    "video_length": "15-45 seconds",
+    "editing": "Cuts every 1-2 seconds. Subtle zooms. No long static shots."
+  },
+
+  "monetization": {
+    "approach": "TBD — financial tools, offshore/legal structures education, high-ticket courses",
+    "cta_pattern": "Comment '[keyword]' and I'll send you the strategy"
+  },
+
+  "generation_template": {
+    "input": ["topic or event"],
+    "output_format": {
+      "hook": "Use hook system — calm, not loud",
+      "body": "Choose one structure",
+      "required_elements": ["1 cold insight", "1 contrast (public vs private behavior)", "optional real-world reference"],
+      "cta": "Comment '[keyword]' for more"
+    }
+  }
+}

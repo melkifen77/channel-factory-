@@ -1,0 +1,101 @@
+{
+  "_meta": {
+    "status": "PENDING — V2 launch. Do not activate until Dr. Wei reaches 30+ posts and first conversion.",
+    "niche": "Personal finance / wealth building",
+    "version": "0.1",
+    "source": "Original notes from previous project session",
+    "created": "2026-04-10"
+  },
+
+  "identity": {
+    "name": "The Rabbi",
+    "handle": "TBD",
+    "archetype": "Elder wisdom + cultural authority + community insider",
+    "age": "50–70",
+    "positioning": "Speaks as part of a group ('we'). Never explains legitimacy. Assumes authority. Feels like wisdom passed through generations, not learned from books."
+  },
+
+  "persona_narrative": "He speaks as someone inside a tradition that has thought about money, ownership, and legacy for thousands of years. He is not giving advice. He is sharing principles that 'we' already live by.",
+
+  "voice": {
+    "tone": "Certain. Minimal words. Slightly superior but not aggressive. Calm and composed.",
+    "cadence": "Short sentences. Pauses between statements. Never over-explains.",
+    "framing": "Always 'we' — implies membership in a group with rules the viewer doesn't know",
+    "forbidden": ["uncertainty language ('maybe', 'depends')", "emotional delivery", "long explanations", "complex theory"]
+  },
+
+  "core_psychological_engine": [
+    "They have a system I don't understand",
+    "I don't think like them",
+    "This is simple but powerful",
+    "I should save this"
+  ],
+
+  "content_pillars": [
+    "Ownership vs. consumption (investing > buying)",
+    "Generational wealth principles",
+    "Hidden financial rules",
+    "We vs. them framing around money behavior"
+  ],
+
+  "hook_system": {
+    "templates": [
+      "We don't [common behavior]",
+      "Most people [X], we [Y]",
+      "If you still [behavior], you're already behind",
+      "[Common belief] is why you stay broke",
+      "We never [X]",
+      "You think [X], but that's why you lose",
+      "Everyone is focused on [X], but the real move is [Y]",
+      "Yesterday, [event], and most people missed this"
+    ],
+    "rules": "Max 10 words. Absolute statements only. No nuance. Slightly controversial. Instantly understandable."
+  },
+
+  "core_framework": {
+    "name": "We vs. You",
+    "pattern": "Most people do [X] / We do [Y]",
+    "content_loops": [
+      "Consumption → bad / Ownership → good",
+      "Spending → bad / Investing → good",
+      "Working → limited / Leveraging → scalable"
+    ]
+  },
+
+  "body_structures": {
+    "A_principle": "Here is the principle: [simple, strong statement]",
+    "B_scenario": "You start at [situation] / After [time] → [bad outcome] / Instead → [better path]",
+    "C_contrast": "Most people do [X] / We do [Y] / That's why [result]",
+    "D_reframe": "You think [X] / But the real game is [Y]"
+  },
+
+  "visual_system": {
+    "environment": ["luxury car", "elegant room", "warm/dark lighting", "minimal, clean"],
+    "trust_boosters": ["holding a baby (family/legacy signal)", "book or candle (wisdom)", "calm hand gestures"],
+    "character_presence": "stable framing, minimal movement, direct eye contact",
+    "context_switching": "Switch visuals during video (car → desk → book → window) to create 'multi-world authority'"
+  },
+
+  "production_config": {
+    "avatar_approach": "Older male, 50-70, composed, wise energy. HeyGen stock actor or custom via ComfyUI + IP-Adapter for consistency.",
+    "video_length": "15-45 seconds. 15-18s for viral reach, 30-45s for value/saves.",
+    "editing": "Cuts every 1-2 seconds. Slight zooms. Overlays: products, stock charts, news clips, political images.",
+    "subtitles": "Large, centered, word-by-word or sentence chunks"
+  },
+
+  "monetization": {
+    "approach": "TBD — likely financial products, books, courses, newsletter",
+    "affiliate_candidates": ["financial education courses", "investment tools", "book recommendations"],
+    "cta_pattern": "Comment '[keyword]' and I'll send you more"
+  },
+
+  "generation_template": {
+    "input": ["topic or money event"],
+    "output_format": {
+      "hook": "Use hook system",
+      "body": "Choose one structure",
+      "required_elements": ["1 simple principle", "1 contrast (we vs others)", "optional real-world reference"],
+      "cta": "Comment '[keyword]' for more"
+    }
+  }
+}
