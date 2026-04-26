@@ -139,3 +139,54 @@ See `accounts/README.md` for launch sequencing.
 - **No anti-medicine framing** ("what Western medicine won't tell you" — forbidden). Use instead: "what took me 40 years to understand."
 - **One idea per video.** Always.
 - **Hook before credentials** on TikTok. Never introduce Dr. Wei before the hook fires.
+
+
+---
+
+## Architecture Update — v3.0 (2026-04-18)
+
+### Review & Iteration: Telegram (not Slack)
+Human review happens via Telegram bot, not Slack. Telegram plays video inline on mobile.
+- ✅ Publish button → trigger Postiz immediately
+- 🔄 Iterate button → user sends voice note or text feedback → Whisper transcribes → Claude routes to correct stage for re-run
+- Max 3 iterations per run. Recurring feedback patterns → appended to persona-memory.md
+
+### Iteration routing logic
+Claude classifies user feedback into: SCRIPT / VOICE / CLIP (index) / SUBTITLES / FULL
+Returns JSON with stage(s) to re-run and specific instruction. Pipeline resumes from that stage.
+
+### Conversion funnel: ManyChat (set up BEFORE first post)
+Comment keyword trigger (e.g. "sleep") → auto-DM with Dub.co affiliate link.
+One static Dub.co link per account. No per-post bio automation needed.
+
+### Clip variation is intentional
+Kling generates independent clips per segment — position/background/prop changes between cuts
+are treated as editing variety, not bugs. Character FACE consistency maintained via consistent
+source avatar image. IP-Adapter/ComfyUI available as fallback if needed.
+
+### Video engine: Kling 3.0 via fal.ai (confirmed)
+3 segments × (ElevenLabs audio → Kling clip) → FFmpeg normalize + stitch + burn .ass subtitles
+No Captions.ai for V1. No automated quality scoring — Telegram review covers it.
+
+### n8n workflow: 4 nodes
+Manual Trigger → Execute Command (pipeline.py) → Telegram bot (wait for approval) → Execute Command (publish.py)
+All logic in Python. n8n handles scheduling and Telegram integration only.
+
+### Key files added to pipeline
+- `utils/telegram.py` — bot send/receive, inline buttons, voice message download
+- `utils/whisper.py` — transcribe voice feedback (OpenAI Whisper API)
+- `utils/iterate.py` — Claude feedback routing, stage re-run orchestration
+
+## Kling Test Results (April 19, 2026)
+- Endpoint: fal-ai/kling-video/v1/pro/ai-avatar (NOT v1.6/lip-sync — that doesn't exist)
+- Full 34s clip: ACCEPTED — no duration cap
+- Face quality: PASS — matches avatar
+- Body movement: PASS — natural head/shoulder motion
+- Lip sync: PASS — good enough for production
+- Artifacts: NONE
+- Generation time: ~12 minutes for 34s video → plan scheduling accordingly
+
+## Architecture Decision: SINGLE CLIP
+3-segment architecture is DROPPED. Pipeline is:
+  Script (Claude) → Full audio (ElevenLabs, one call) → Single video (Kling ai-avatar, one call) → Telegram review → Postiz publish
+No FFmpeg stitching. No segment splitting. No spaCy.

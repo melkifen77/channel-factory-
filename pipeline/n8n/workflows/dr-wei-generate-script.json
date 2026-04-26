@@ -1,0 +1,97 @@
+{
+  "id": "dr-wei-script-video-v1",
+  "name": "Dr. Wei — Script + Video (V1)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Load the Dr. Wei character spec from the mounted accounts volume\n// and extract the system_prompt field. Single source of truth — if the\n// spec file changes, this workflow picks it up on the next run.\nconst fs = require('fs');\nconst specPath = '/data/accounts/dr-wei/character-spec.json';\nconst spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));\n\nif (!spec.system_prompt) {\n  throw new Error('system_prompt field missing from character-spec.json');\n}\n\n// V1 test brief: Script #1 from the hook-library sequence.\n// Bridge pillar, H1 hook, B1 body, Phase 1 Day 1, no CTA.\n//\n// CRITICAL: we ask Claude to wrap the exact voiceover text in\n// <voiceover>...</voiceover> tags so the downstream HeyGen node\n// can extract only the spoken text (no hooks, no caption, no hashtags).\nconst userBrief = [\n  'Generate a TikTok script for Dr. Wei following the exact protocol below.',\n  '',\n  'PHASE: 1 (Day 1)',\n  'PLATFORM: TikTok (30–45 seconds, ~100–130 words)',\n  'PILLAR: bridge',\n  'HOOK TEMPLATE: H1 — Specific Pain Hook',\n  'BODY STRUCTURE: B1 — Bridge (TCM concept → Western equivalent → implication)',\n  'TOPIC: Why you wake at exactly 3am — the TCM liver clock (1–3am = Liver time, 肝 Gān) mapped to modern cortisol dysregulation research.',\n  'CTA ALLOWED: no (pre-Day 60 trust-building phase)',\n  'AFFILIATE CONTEXT: none — no product mentions',\n  '',\n  'OUTPUT FORMAT (markdown, in this exact order):',\n  '1. ## Hook Variants — five hook variants, one sentence each.',\n  '2. ## Full Script — the ~100–130 word script.',\n  '3. ## Voiceover — wrap the EXACT same script text inside <voiceover>...</voiceover> tags. No markdown, no speaker labels, no stage directions. Plain spoken text only. This is what will be passed to HeyGen verbatim.',\n  '4. ## Caption — caption with 3–5 hashtags.',\n  '',\n  'Stay strictly in Dr. Wei voice. One idea only. No anti-medicine framing. No product mention. Hook fires before any credential reference.'\n].join('\\n');\n\nreturn [{\n  json: {\n    system_prompt: spec.system_prompt,\n    user_brief: userBrief\n  }\n}];"
+      },
+      "id": "load-spec",
+      "name": "Load Dr. Wei Spec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1500,\n  \"system\": {{ JSON.stringify($json.system_prompt) }},\n  \"messages\": [\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.user_brief) }} }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "claude-api",
+      "name": "Claude API (Dr. Wei)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the generated markdown + the voiceover text and log to stdout\n// (visible via: docker logs -f channel-factory-n8n)\nconst response = $input.first().json;\n\nif (!response.content || !Array.isArray(response.content) || !response.content[0]) {\n  console.error('[Dr. Wei] Unexpected API response shape:');\n  console.error(JSON.stringify(response, null, 2));\n  throw new Error('Claude API response missing content[0]');\n}\n\nconst markdown = response.content[0].text;\nconst usage = response.usage || {};\n\n// Pull the exact voiceover text out of <voiceover>...</voiceover>.\nconst match = markdown.match(/<voiceover>([\\s\\S]*?)<\\/voiceover>/i);\nif (!match) {\n  console.error('[Dr. Wei] Claude response is missing <voiceover>...</voiceover> tags:');\n  console.error(markdown);\n  throw new Error('No <voiceover> tags in generated script');\n}\nconst voiceover = match[1].trim();\n\nconsole.log('\\n' + '='.repeat(60));\nconsole.log('  DR. WEI — GENERATED SCRIPT');\nconsole.log('  model: ' + (response.model || 'unknown'));\nconsole.log('  tokens: ' + (usage.input_tokens || '?') + ' in / ' + (usage.output_tokens || '?') + ' out');\nconsole.log('='.repeat(60) + '\\n');\nconsole.log(markdown);\nconsole.log('\\n' + '-'.repeat(60));\nconsole.log('  VOICEOVER EXTRACTED (' + voiceover.length + ' chars)');\nconsole.log('-'.repeat(60));\nconsole.log(voiceover);\nconsole.log('\\n' + '='.repeat(60) + '\\n');\n\nreturn [{\n  json: {\n    markdown,\n    voiceover,\n    model: response.model,\n    usage,\n    generated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "extract-log",
+      "name": "Extract + Log Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate the HeyGen avatar video from the voiceover text.\n// Calls POST /v2/video/generate, then polls GET /v1/video_status.get\n// until status === 'completed' (or 'failed').\n//\n// Required env: HEYGEN_API_KEY, HEYGEN_TALKING_PHOTO_ID, HEYGEN_VOICE_ID\n// Uses talking_photo character (Dr. Mei Wei) + ElevenLabs voice via HeyGen.\n// HTTP: uses n8n's this.helpers.httpRequest (fetch is not available in the sandbox).\n\nconst apiKey = $env.HEYGEN_API_KEY;\nconst talkingPhotoId = $env.HEYGEN_TALKING_PHOTO_ID;\nconst voiceId = $env.HEYGEN_VOICE_ID;\n\nif (!apiKey) throw new Error('HEYGEN_API_KEY not set in environment');\nif (!talkingPhotoId) throw new Error('HEYGEN_TALKING_PHOTO_ID not set in environment');\nif (!voiceId) throw new Error('HEYGEN_VOICE_ID not set in environment');\n\nconst voiceover = $input.first().json.voiceover;\nif (!voiceover) throw new Error('No voiceover text in input');\n\nconst generateBody = {\n  video_inputs: [\n    {\n      character: {\n        type: 'talking_photo',\n        talking_photo_id: talkingPhotoId,\n        talking_photo_style: 'square',\n        talking_style: 'stable',\n        expression: 'default',\n        scale: 1.0\n      },\n      voice: {\n        type: 'text',\n        input_text: voiceover,\n        voice_id: voiceId\n      },\n      background: {\n        type: 'color',\n        value: '#f5f1e8'\n      }\n    }\n  ],\n  dimension: { width: 720, height: 1280 },\n  test: false,\n  caption: false\n};\n\nconsole.log('\\n[HeyGen] Submitting video generation request...');\nlet genJson;\ntry {\n  genJson = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.heygen.com/v2/video/generate',\n    headers: {\n      'X-Api-Key': apiKey,\n      'Content-Type': 'application/json',\n      'Accept': 'application/json'\n    },\n    body: generateBody,\n    json: true\n  });\n} catch (err) {\n  console.error('[HeyGen] Generate request failed:', err.message);\n  throw err;\n}\n\nif (genJson.error) {\n  console.error('[HeyGen] Generate returned error:', JSON.stringify(genJson, null, 2));\n  throw new Error('HeyGen generate error: ' + (genJson.error.message || JSON.stringify(genJson.error)));\n}\n\nconst videoId = genJson.data && genJson.data.video_id;\nif (!videoId) {\n  console.error('[HeyGen] No video_id in response:', JSON.stringify(genJson, null, 2));\n  throw new Error('HeyGen generate returned no video_id');\n}\n\nconsole.log('[HeyGen] video_id = ' + videoId);\nconsole.log('[HeyGen] Polling status every 15s (max 5 min)...');\n\nconst sleep = (ms) => new Promise(r => setTimeout(r, ms));\nconst maxAttempts = 40; // 40 * 20s = 800s (~13 min). HeyGen routinely takes 5–8 min.\nlet status = 'pending';\nlet videoUrl = null;\nlet thumbnailUrl = null;\nlet duration = null;\nlet lastPayload = null;\n\nfor (let attempt = 1; attempt <= maxAttempts; attempt++) {\n  await sleep(20000);\n  let statusJson;\n  try {\n    statusJson = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://api.heygen.com/v1/video_status.get',\n      qs: { video_id: videoId },\n      headers: { 'X-Api-Key': apiKey, 'Accept': 'application/json' },\n      json: true\n    });\n  } catch (err) {\n    console.error('[HeyGen] Status poll attempt ' + attempt + ' failed: ' + err.message);\n    continue;\n  }\n  lastPayload = statusJson;\n  status = (statusJson.data && statusJson.data.status) || 'unknown';\n  console.log('[HeyGen] attempt ' + attempt + '/' + maxAttempts + ' → status: ' + status);\n\n  if (status === 'completed') {\n    videoUrl = statusJson.data.video_url;\n    thumbnailUrl = statusJson.data.thumbnail_url;\n    duration = statusJson.data.duration;\n    break;\n  }\n  if (status === 'failed') {\n    console.error('[HeyGen] Video generation failed:', JSON.stringify(statusJson, null, 2));\n    throw new Error('HeyGen video failed: ' + ((statusJson.data && statusJson.data.error && statusJson.data.error.message) || 'unknown error'));\n  }\n}\n\nif (status !== 'completed') {\n  console.error('[HeyGen] Timed out after 5 minutes. Last payload:');\n  console.error(JSON.stringify(lastPayload, null, 2));\n  throw new Error('HeyGen polling timed out (last status: ' + status + ')');\n}\n\nconsole.log('\\n' + '='.repeat(60));\nconsole.log('  DR. WEI — HEYGEN VIDEO READY');\nconsole.log('='.repeat(60));\nconsole.log('  video_id:     ' + videoId);\nconsole.log('  duration:     ' + (duration != null ? duration : '?') + 's');\nconsole.log('  video_url:    ' + videoUrl);\nconsole.log('  thumbnail:    ' + thumbnailUrl);\nconsole.log('='.repeat(60) + '\\n');\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    heygen: {\n      video_id: videoId,\n      video_url: videoUrl,\n      thumbnail_url: thumbnailUrl,\n      duration_seconds: duration,\n      status: 'completed'\n    }\n  }\n}];"
+      },
+      "id": "heygen-generate",
+      "name": "HeyGen — Generate + Poll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Load Dr. Wei Spec", "type": "main", "index": 0 }]]
+    },
+    "Load Dr. Wei Spec": {
+      "main": [[{ "node": "Claude API (Dr. Wei)", "type": "main", "index": 0 }]]
+    },
+    "Claude API (Dr. Wei)": {
+      "main": [[{ "node": "Extract + Log Script", "type": "main", "index": 0 }]]
+    },
+    "Extract + Log Script": {
+      "main": [[{ "node": "HeyGen — Generate + Poll", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 600
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    { "name": "dr-wei" },
+    { "name": "v1" }
+  ]
+}

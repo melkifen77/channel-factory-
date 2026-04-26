@@ -6,3 +6,12 @@ node_modules/
 *.log
 secrets/
 credentials/
+
+# Test media files (large binaries)
+test/*.mp4
+test/*.mp3
+test/*.aiff
+test/*.wav
+
+# Claude Flow internals
+.claude-flow/
